@@ -1,6 +1,8 @@
 #include <ncurses.h>
 #include <iostream>
 #include <list>
+#include <chrono>
+#include <thread>
 
 using namespace std;
 
@@ -12,6 +14,7 @@ int foodX = 10;
 int foodY = 10;
 int score = 0;
 bool snakeDead = false;
+
 /* 
     0 = north
     1 = east
@@ -34,6 +37,12 @@ list <SnakeSegment> snake = {
     { 64, 20 } 
 };
 
+void updateScreen(const char *info, int x, int y) {
+    mvprintw(y, x, info);
+    wrefresh(screen);
+    refresh();
+}
+
 void screenSetup() {
     initscr();
     
@@ -42,30 +51,51 @@ void screenSetup() {
     refresh();
 
     box(screen, 0, 0);
-    wrefresh(screen);
-}
 
-void updateScreen(const char *info, int x, int y) {
-    mvprintw(y, x, info);
-    wrefresh(screen);
+    updateScreen("[ SNAKE ]", (screenWidth/2), 0);
 }
 
 int main() {
+    int counter = 0;
+
     screenSetup();
+    
+    while(!snakeDead && counter < 20) {
+        counter++;
+        wrefresh(screen);
 
-    updateScreen("[ SNAKE ]", (screenWidth/2), 0);
+        // Timing and Input
+        this_thread::sleep_for(std::chrono::milliseconds(200));
 
-    while(!snakeDead) {
-      // Timing and Input
+        // -------------------------------
+        // Game Logic
+        switch(snakeDirection) {
+            case 0: // UP
+            updateScreen("[ !SNAKE IS UP! ]", (screenWidth/2), 1);
+            snakeDirection++;
+            snake.push_front({snake.front().x, snake.front().y -1});
+            break;
+        case 1: // RIGHT
+            updateScreen("[ !SNAKE IS RIGHT! ]", (screenWidth/2), 1);
+            snake.push_front({snake.front().x + 1, snake.front().y});
+            break;
+        case 2: // DOWN
+            updateScreen("[ !SNAKE IS DOWN! ]", (screenWidth/2), 1);
+            snake.push_front({snake.front().x, snake.front().y +1});
+            break;
+        case 3: // LEFT
+            updateScreen("[ !SNAKE IS LEFT! ]", (screenWidth/2), 1);
+            snake.push_front({snake.front().x -1, snake.front().y});
+            break;
+        default:
+            snakeDirection = 3;
+            break;
+        }
 
-      // Game Logic
+        snake.pop_back();
 
-      // Display to player
-
-        // for(std::list<SnakeSegment>::iterator it = snake.begin(); it != snake.end(); it ++) {
-        //     it
-        // }
-
+        // -------------------------------
+        // Presentation
         for (auto s : snake) {
             // Snake body
             updateScreen((snakeDead ? "+" : "O"), s.x, s.y);
@@ -75,10 +105,7 @@ int main() {
 
             // Fruit
             updateScreen("F", foodX, foodY);
-        }  
-
-        getch();
-        snakeDead = true;
+        }
     }
 
     delwin(screen);
