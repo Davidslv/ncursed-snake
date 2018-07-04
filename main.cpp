@@ -3,7 +3,7 @@
 #include <list>
 #include <chrono>
 #include <thread>
-#include <pthread/pthread.h>
+// #include <pthread/pthread.h>
 
 using namespace std;
 
@@ -106,6 +106,17 @@ void gameLogic() {
     snakeUpdate();
 }
 
+void userInput() {
+    if (getch() == 'a') {
+        snakeDirection++;
+        if (snakeDirection == 4) snakeDirection = 0;
+    }
+    if (getch() == 'd') {
+        snakeDirection--;
+        if (snakeDirection == -1) snakeDirection = 3;
+    }
+}
+
 void screenUpdate() {
     while(snakeAlive) {
         wrefresh(screen);
@@ -113,16 +124,11 @@ void screenUpdate() {
         // Timing and Input
         this_thread::sleep_for(std::chrono::milliseconds(200));
 
-        // if (getch() == 'a') {
-        //     snakeDirection++;
-        //     if (snakeDirection == 4) snakeDirection = 0;
-        // }
-        // if (getch() == 'd') {
-        //     snakeDirection--;
-        //     if (snakeDirection == -1) snakeDirection = 3;
-        // }
+        std::thread thread1(userInput);
+        std::thread thread2(gameLogic);
 
-        gameLogic();
+        thread1.detach();
+        thread2.detach();
     }
 }
 
