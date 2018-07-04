@@ -80,27 +80,29 @@ void snakeUpdate() {
 }
 
 void gameLogic() {
+    // Timing and Input
+    this_thread::sleep_for(std::chrono::milliseconds(200));
+
     // -------------------------------
     // Game Logic
     switch(snakeDirection) {
         case 0: // UP
-            updateScreen("[ !SNAKE IS UP! ]", (screenWidth/2), 1);
             snake.push_front({snake.front().x, snake.front().y -1});
             break;
         case 1: // RIGHT
-            updateScreen("[ !SNAKE IS RIGHT! ]", (screenWidth/2), 1);
             snake.push_front({snake.front().x + 1, snake.front().y});
             break;
         case 2: // DOWN
-            updateScreen("[ !SNAKE IS DOWN! ]", (screenWidth/2), 1);
             snake.push_front({snake.front().x, snake.front().y +1});
             break;
         case 3: // LEFT
-            updateScreen("[ !SNAKE IS LEFT! ]", (screenWidth/2), 1);
             snake.push_front({snake.front().x -1, snake.front().y});
             break;
     }
 
+    // doesn't seem to be working
+    // the intention is to remove the tail of the snake
+    // since the snake has moved forward.
     snake.pop_back();
 
     snakeUpdate();
@@ -111,7 +113,7 @@ void userInput() {
         snakeDirection++;
         if (snakeDirection == 4) snakeDirection = 0;
     }
-    if (getch() == 'd') {
+    else if (getch() == 'd') {
         snakeDirection--;
         if (snakeDirection == -1) snakeDirection = 3;
     }
@@ -121,14 +123,23 @@ void screenUpdate() {
     while(snakeAlive) {
         wrefresh(screen);
 
-        // Timing and Input
-        this_thread::sleep_for(std::chrono::milliseconds(200));
+        std::thread user_input(userInput);
+        std::thread game(gameLogic);
 
-        std::thread thread1(userInput);
-        std::thread thread2(gameLogic);
+        // The intention here is to keep the game running
+        // without waiting for user input.
+        // Although the new problem is that the snake can turn very late or not at all
+        // not sure what could be the solution at the moment.
+        // Windows.h library has GetAsyncKeyState which does what I'm looking for
+        // although I'm using OSX and I don't think there's a easy way for this.
 
-        thread1.detach();
-        thread2.detach();
+        if (user_input.joinable()) {
+            user_input.detach();
+        }
+
+        if (game.joinable()) {
+            game.join();
+        }
     }
 }
 
