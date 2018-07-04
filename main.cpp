@@ -9,11 +9,16 @@ using namespace std;
 WINDOW *screen;
 int screenWidth = 120;
 int screenHeight = 40;
+int key;
 
 int foodX = 10;
 int foodY = 10;
 int score = 0;
-bool snakeDead = false;
+bool    snakeDead   = false,
+        rightKey    = false,
+        leftKey     = false,
+        rightKeyOld = false,
+        leftKeyOld  = false;
 
 /* 
     0 = north
@@ -56,29 +61,41 @@ void screenSetup() {
 }
 
 int main() {
-    int counter = 0;
-
     screenSetup();
-    
-    while(!snakeDead && counter < 20) {
-        counter++;
+
+    while(((key = getch()) != 'q') && !snakeDead) {
         wrefresh(screen);
 
         // Timing and Input
         this_thread::sleep_for(std::chrono::milliseconds(200));
 
+        rightKey = getch() == KEY_RIGHT;
+        leftKey = getch() == KEY_LEFT;
+
+        if (rightKey && !rightKeyOld) {
+            snakeDirection++;
+            if (snakeDirection == 4) snakeDirection = 0;
+        }
+
+        if (leftKey && !leftKeyOld) {
+            snakeDirection--;
+            if (snakeDirection == -1) snakeDirection = 3;
+        }
+
+        rightKeyOld = rightKey;
+        leftKeyOld  = leftKey;
+
         // -------------------------------
         // Game Logic
         switch(snakeDirection) {
             case 0: // UP
-            updateScreen("[ !SNAKE IS UP! ]", (screenWidth/2), 1);
-            snakeDirection++;
-            snake.push_front({snake.front().x, snake.front().y -1});
-            break;
-        case 1: // RIGHT
-            updateScreen("[ !SNAKE IS RIGHT! ]", (screenWidth/2), 1);
-            snake.push_front({snake.front().x + 1, snake.front().y});
-            break;
+                updateScreen("[ !SNAKE IS UP! ]", (screenWidth/2), 1);
+                snake.push_front({snake.front().x, snake.front().y -1});
+                break;
+            case 1: // RIGHT
+                updateScreen("[ !SNAKE IS RIGHT! ]", (screenWidth/2), 1);
+                snake.push_front({snake.front().x + 1, snake.front().y});
+                break;
         case 2: // DOWN
             updateScreen("[ !SNAKE IS DOWN! ]", (screenWidth/2), 1);
             snake.push_front({snake.front().x, snake.front().y +1});
@@ -86,9 +103,6 @@ int main() {
         case 3: // LEFT
             updateScreen("[ !SNAKE IS LEFT! ]", (screenWidth/2), 1);
             snake.push_front({snake.front().x -1, snake.front().y});
-            break;
-        default:
-            snakeDirection = 3;
             break;
         }
 
