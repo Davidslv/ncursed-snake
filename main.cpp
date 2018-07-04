@@ -14,7 +14,7 @@ int key;
 int foodX = 10;
 int foodY = 10;
 int score = 0;
-bool    snakeDead   = false,
+bool    snakeAlive  = true,
         rightKey    = false,
         leftKey     = false,
         rightKeyOld = false,
@@ -50,9 +50,11 @@ void updateScreen(const char *info, int x, int y) {
 
 void screenSetup() {
     initscr();
+    curs_set(0); // remove cursor from screen
     
     screen = newwin(screenHeight, screenWidth, 0, 0);
     noecho();
+    cbreak();
     refresh();
 
     box(screen, 0, 0);
@@ -63,27 +65,22 @@ void screenSetup() {
 int main() {
     screenSetup();
 
-    while(((key = getch()) != 'q') && !snakeDead) {
+    while(((key = getch()) != 'q') && snakeAlive) {
         wrefresh(screen);
 
         // Timing and Input
         this_thread::sleep_for(std::chrono::milliseconds(200));
 
-        rightKey = getch() == KEY_RIGHT;
-        leftKey = getch() == KEY_LEFT;
-
-        if (rightKey && !rightKeyOld) {
-            snakeDirection++;
-            if (snakeDirection == 4) snakeDirection = 0;
+        switch(key) {
+            case KEY_RIGHT:
+                snakeDirection++;
+                if (snakeDirection == 4) snakeDirection = 0;
+            break;
+            case KEY_LEFT:
+                snakeDirection--;
+                if (snakeDirection == -1) snakeDirection = 3;
+            break;
         }
-
-        if (leftKey && !leftKeyOld) {
-            snakeDirection--;
-            if (snakeDirection == -1) snakeDirection = 3;
-        }
-
-        rightKeyOld = rightKey;
-        leftKeyOld  = leftKey;
 
         // -------------------------------
         // Game Logic
@@ -112,10 +109,10 @@ int main() {
         // Presentation
         for (auto s : snake) {
             // Snake body
-            updateScreen((snakeDead ? "+" : "O"), s.x, s.y);
+            updateScreen((snakeAlive ? "O" : "+"), s.x, s.y);
             
             // Snake head
-            updateScreen((snakeDead ? "X" : "@"), snake.front().x , snake.front().y);
+            updateScreen((snakeAlive ? "@" : "X"), snake.front().x , snake.front().y);
 
             // Fruit
             updateScreen("F", foodX, foodY);
