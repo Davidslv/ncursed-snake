@@ -3,6 +3,7 @@
 #include <list>
 #include <chrono>
 #include <thread>
+#include <pthread/pthread.h>
 
 using namespace std;
 
@@ -55,6 +56,7 @@ void screenSetup() {
     screen = newwin(screenHeight, screenWidth, 0, 0);
     noecho();
     cbreak();
+    nodelay(screen, TRUE); // probably can be remove
     refresh();
 
     box(screen, 0, 0);
@@ -62,37 +64,33 @@ void screenSetup() {
     updateScreen("[ SNAKE ]", (screenWidth/2), 0);
 }
 
-int main() {
-    screenSetup();
+void snakeUpdate() {
+    // -------------------------------
+    // Presentation
+    for (auto s : snake) {
+        // Snake body
+        updateScreen((snakeAlive ? "O" : "+"), s.x, s.y);
 
-    while(((key = getch()) != 'q') && snakeAlive) {
-        wrefresh(screen);
+        // Snake head
+        updateScreen((snakeAlive ? "@" : "X"), snake.front().x , snake.front().y);
 
-        // Timing and Input
-        this_thread::sleep_for(std::chrono::milliseconds(200));
+        // Fruit
+        updateScreen("F", foodX, foodY);
+    }
+}
 
-        switch(key) {
-            case KEY_RIGHT:
-                snakeDirection++;
-                if (snakeDirection == 4) snakeDirection = 0;
+void gameLogic() {
+    // -------------------------------
+    // Game Logic
+    switch(snakeDirection) {
+        case 0: // UP
+            updateScreen("[ !SNAKE IS UP! ]", (screenWidth/2), 1);
+            snake.push_front({snake.front().x, snake.front().y -1});
             break;
-            case KEY_LEFT:
-                snakeDirection--;
-                if (snakeDirection == -1) snakeDirection = 3;
+        case 1: // RIGHT
+            updateScreen("[ !SNAKE IS RIGHT! ]", (screenWidth/2), 1);
+            snake.push_front({snake.front().x + 1, snake.front().y});
             break;
-        }
-
-        // -------------------------------
-        // Game Logic
-        switch(snakeDirection) {
-            case 0: // UP
-                updateScreen("[ !SNAKE IS UP! ]", (screenWidth/2), 1);
-                snake.push_front({snake.front().x, snake.front().y -1});
-                break;
-            case 1: // RIGHT
-                updateScreen("[ !SNAKE IS RIGHT! ]", (screenWidth/2), 1);
-                snake.push_front({snake.front().x + 1, snake.front().y});
-                break;
         case 2: // DOWN
             updateScreen("[ !SNAKE IS DOWN! ]", (screenWidth/2), 1);
             snake.push_front({snake.front().x, snake.front().y +1});
@@ -101,25 +99,42 @@ int main() {
             updateScreen("[ !SNAKE IS LEFT! ]", (screenWidth/2), 1);
             snake.push_front({snake.front().x -1, snake.front().y});
             break;
-        }
-
-        snake.pop_back();
-
-        // -------------------------------
-        // Presentation
-        for (auto s : snake) {
-            // Snake body
-            updateScreen((snakeAlive ? "O" : "+"), s.x, s.y);
-            
-            // Snake head
-            updateScreen((snakeAlive ? "@" : "X"), snake.front().x , snake.front().y);
-
-            // Fruit
-            updateScreen("F", foodX, foodY);
-        }
     }
 
+    snake.pop_back();
+
+    snakeUpdate();
+}
+
+void screenUpdate() {
+    while(snakeAlive) {
+        wrefresh(screen);
+
+        // Timing and Input
+        this_thread::sleep_for(std::chrono::milliseconds(200));
+
+        // if (getch() == 'a') {
+        //     snakeDirection++;
+        //     if (snakeDirection == 4) snakeDirection = 0;
+        // }
+        // if (getch() == 'd') {
+        //     snakeDirection--;
+        //     if (snakeDirection == -1) snakeDirection = 3;
+        // }
+
+        gameLogic();
+    }
+}
+
+void clearScreen() {
     delwin(screen);
     endwin();
+}
+
+int main() {
+    screenSetup();
+    screenUpdate();
+    clearScreen();
+
     return 0;
 }
