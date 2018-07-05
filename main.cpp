@@ -12,15 +12,16 @@ WINDOW *screen;
 
 int screenWidth  = 120,
     screenHeight = 40,
-    foodX = 10,
-    foodY = 10,
+    foodX = 40,
+    foodY = 20,
     score = 0;
 
 bool snakeAlive  = true,
      rightKey    = false,
      leftKey     = false,
      rightKeyOld = false,
-     leftKeyOld  = false;
+     leftKeyOld  = false,
+     foodEaten   = false;
 
 
 enum SnakeDirection { UP, RIGHT, DOWN, LEFT };
@@ -86,7 +87,7 @@ void snakeUpdate() {
 
 void gameLogic() {
     // Timing and Input
-    this_thread::sleep_for(std::chrono::milliseconds(200));
+    this_thread::sleep_for(std::chrono::milliseconds(190));
 
     // -------------------------------
     // Game Logic
@@ -139,6 +140,31 @@ void userInput() {
                 snakeDirection = LEFT;
             }
             break;
+    }
+
+    // -------------------------------
+    // Collision detection
+
+    // World boundaries
+    if (snake.front().x < 1 || snake.front().x >= (screenWidth -1))
+        snakeAlive = false;
+
+    if (snake.front().y < 1 || snake.front().y >= (screenHeight -1))
+        snakeAlive = false;
+
+    // Fruit collision
+    if (snake.front().x == foodX && snake.front().y == foodY) {
+        updateScreen(" ", foodX, foodY);
+        score++;
+        foodEaten = true;
+
+        while(foodEaten) {
+            foodX = rand() % (screenWidth - 1);
+            foodY = rand() % (screenHeight - 1);
+
+            if ((mvinch(foodY, foodX) == ' '))
+                foodEaten = false;
+        }
     }
 }
 
