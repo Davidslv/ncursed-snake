@@ -2,24 +2,25 @@
 #include <iostream>
 #include <list>
 #include <chrono>
+
+// this is necessary to slow down the game 200ms
 #include <thread>
-// #include <pthread/pthread.h>
 
 using namespace std;
 
 WINDOW *screen;
-int screenWidth = 120;
-int screenHeight = 40;
-int key;
 
-int foodX = 10;
-int foodY = 10;
-int score = 0;
-bool    snakeAlive  = true,
-        rightKey    = false,
-        leftKey     = false,
-        rightKeyOld = false,
-        leftKeyOld  = false;
+int screenWidth  = 120,
+    screenHeight = 40,
+    foodX = 10,
+    foodY = 10,
+    score = 0;
+
+bool snakeAlive  = true,
+     rightKey    = false,
+     leftKey     = false,
+     rightKeyOld = false,
+     leftKeyOld  = false;
 
 
 enum SnakeDirection { UP, RIGHT, DOWN, LEFT };
@@ -28,7 +29,6 @@ SnakeDirection snakeDirection = LEFT;
 struct SnakeSegment {
     int x;
     int y;
-    
 };
 
 list <SnakeSegment> snake = { 
