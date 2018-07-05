@@ -21,13 +21,9 @@ bool    snakeAlive  = true,
         rightKeyOld = false,
         leftKeyOld  = false;
 
-/* 
-    0 = north
-    1 = east
-    2 = south 
-    3 = west
-*/
-int snakeDirection = 3;
+
+enum SnakeDirection { UP, RIGHT, DOWN, LEFT };
+SnakeDirection snakeDirection = LEFT;
 
 struct SnakeSegment {
     int x;
@@ -56,7 +52,6 @@ void screenSetup() {
     screen = newwin(screenHeight, screenWidth, 0, 0);
     noecho();
     cbreak();
-    nodelay(screen, TRUE); // probably can be remove
     refresh();
 
     box(screen, 0, 0);
@@ -86,16 +81,16 @@ void gameLogic() {
     // -------------------------------
     // Game Logic
     switch(snakeDirection) {
-        case 0: // UP
+        case UP:
             snake.push_front({snake.front().x, snake.front().y -1});
             break;
-        case 1: // RIGHT
+        case RIGHT:
             snake.push_front({snake.front().x + 1, snake.front().y});
             break;
-        case 2: // DOWN
+        case DOWN:
             snake.push_front({snake.front().x, snake.front().y +1});
             break;
-        case 3: // LEFT
+        case LEFT:
             snake.push_front({snake.front().x -1, snake.front().y});
             break;
     }
@@ -109,13 +104,34 @@ void gameLogic() {
 }
 
 void userInput() {
-    if (getch() == 'a') {
-        snakeDirection++;
-        if (snakeDirection == 4) snakeDirection = 0;
-    }
-    else if (getch() == 'd') {
-        snakeDirection--;
-        if (snakeDirection == -1) snakeDirection = 3;
+    // this function is here to guarantee that the
+    // getch() function reads user input in a non-blocking way
+    // so that the snake keeps moving.
+    nodelay(stdscr, TRUE);
+
+    // Avoid user input if the input goes in the oposite direction
+    // that the snake is going. This avoids the snake going over herself.
+    switch(getch()) {
+        case 'w':
+            if (snakeDirection != DOWN) {
+                snakeDirection = UP;
+            }
+            break;
+        case 'd':
+            if (snakeDirection != LEFT) {
+                snakeDirection = RIGHT;
+            }
+            break;
+        case 's':
+            if (snakeDirection != UP) {
+                snakeDirection = DOWN;
+            }
+            break;
+        case 'a':
+            if (snakeDirection != RIGHT) {
+                snakeDirection = LEFT;
+            }
+            break;
     }
 }
 
@@ -123,23 +139,8 @@ void screenUpdate() {
     while(snakeAlive) {
         wrefresh(screen);
 
-        std::thread user_input(userInput);
-        std::thread game(gameLogic);
-
-        // The intention here is to keep the game running
-        // without waiting for user input.
-        // Although the new problem is that the snake can turn very late or not at all
-        // not sure what could be the solution at the moment.
-        // Windows.h library has GetAsyncKeyState which does what I'm looking for
-        // although I'm using OSX and I don't think there's a easy way for this.
-
-        if (user_input.joinable()) {
-            user_input.detach();
-        }
-
-        if (game.joinable()) {
-            game.join();
-        }
+        gameLogic();
+        userInput();
     }
 }
 
