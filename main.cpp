@@ -172,6 +172,15 @@ void userInput() {
             snake.push_back({ snake.back().x, snake.back().y });
         }
     }
+
+    // Snake colliding with itself
+    for(list<SnakeSegment>::iterator segment = snake.begin(); segment != snake.end(); segment++) {
+        if (segment != snake.begin() &&
+            segment->x == snake.front().x &&
+            segment->y == snake.front().y) {
+            snakeAlive = false;
+        }
+    }
 }
 
 void screenUpdate() {
