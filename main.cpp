@@ -167,6 +167,10 @@ void userInput() {
             if ((mvinch(foodY, foodX) == ' '))
                 foodEaten = false;
         }
+
+        for(int i = 0; i < 3; i++) {
+            snake.push_back({ snake.back().x, snake.back().y });
+        }
     }
 }
 
