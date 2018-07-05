@@ -36,7 +36,8 @@ list <SnakeSegment> snake = {
     { 61, 20 }, 
     { 62, 20 }, 
     { 63, 20 }, 
-    { 64, 20 } 
+    { 64, 20 },
+    { 65, 20 }
 };
 
 void updateScreen(const char *info, int x, int y) {
@@ -55,8 +56,11 @@ void screenSetup() {
     refresh();
 
     box(screen, 0, 0);
+    updateScreen("[ SNAKE ]", (screenWidth/2) - 5, 0);
+}
 
-    updateScreen("[ SNAKE ]", (screenWidth/2), 0);
+void updateScore() {
+    mvprintw(0, 2, "[SCORE: %i ]", score);
 }
 
 void snakeUpdate() {
@@ -68,6 +72,12 @@ void snakeUpdate() {
 
         // Snake head
         updateScreen((snakeAlive ? "@" : "X"), snake.front().x , snake.front().y);
+
+        // Remove snake last tail position.
+        // this works together with snake.pop_back();
+        // although this prevents the last segment of the snake to be shown.
+        // meaning that when the snake 5 segments it only shows 4.
+        updateScreen(" ", snake.back().x, snake.back().y);
 
         // Fruit
         updateScreen("F", foodX, foodY);
@@ -95,9 +105,6 @@ void gameLogic() {
             break;
     }
 
-    // doesn't seem to be working
-    // the intention is to remove the tail of the snake
-    // since the snake has moved forward.
     snake.pop_back();
 
     snakeUpdate();
@@ -141,6 +148,7 @@ void screenUpdate() {
 
         gameLogic();
         userInput();
+        updateScore();
     }
 }
 
