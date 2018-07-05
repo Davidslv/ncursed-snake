@@ -2,6 +2,8 @@
 #include <iostream>
 #include <list>
 #include <chrono>
+#include <time.h>
+
 
 // this is necessary to slow down the game 200ms
 #include <thread>
@@ -184,6 +186,8 @@ void clearScreen() {
 }
 
 int main() {
+    srand(time(NULL));
+
     screenSetup();
     screenUpdate();
     clearScreen();
